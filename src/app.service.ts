@@ -2,6 +2,9 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscussionBumperService } from './workers/discussion-bumper/discussion-bumper.service';
 import { DiscussionCreatorService } from './workers/discussion-creator/discussion-creator.service';
 import { GroupSpammerService } from './workers/group-spammer/group-spammer.service';
+import { AddBumperTextDto } from './dto/add-bumper-text.dto';
+import { PrismaService } from './prisma.service';
+import { DeleteBumperTextDto } from './dto/delete-bumper-text.dto';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -9,6 +12,7 @@ export class AppService implements OnModuleInit {
     private readonly wDisBumper: DiscussionBumperService,
     private readonly wDisCreator: DiscussionCreatorService,
     private readonly wGroupSpammer: GroupSpammerService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async onModuleInit() {
@@ -19,5 +23,30 @@ export class AppService implements OnModuleInit {
     this.wDisBumper.init().then();
     this.wDisCreator.init().then();
     this.wGroupSpammer.init().then();
+  }
+
+  async getBumperText() {
+    const records = await this.prisma.discusBumperText.findMany();
+
+    return records.map((e) => ({
+      textId: e.id,
+      text: e.text,
+    }));
+  }
+
+  async addBumperText(data: AddBumperTextDto) {
+    return this.prisma.discusBumperText.create({
+      data,
+    });
+  }
+
+  async deleteBumperText(data: DeleteBumperTextDto) {
+    try {
+      await this.prisma.discusBumperText.delete({
+        where: {
+          id: data.textId,
+        },
+      });
+    } catch (e) {}
   }
 }

@@ -98,6 +98,8 @@ export class DiscussionBumperService {
       return this.prepareCloserBump();
     }
 
+    this.logger.log('Бампим');
+
     try {
       await botForBump.writeCommentInDiscussion(
         record.groupId,
