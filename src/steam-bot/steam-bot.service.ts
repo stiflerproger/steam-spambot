@@ -9,6 +9,7 @@ export class SteamBotService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
+    return;
     const dbBots = await this.prisma.bot.findMany();
 
     this.#bots = dbBots.map((bot) => {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Render } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AddBumperTextDto } from './dto/add-bumper-text.dto';
 import { DeleteBumperTextDto } from './dto/delete-bumper-text.dto';
@@ -8,6 +8,18 @@ import { AddBotDto } from './dto/add-bot.dto';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
+
+  @Get()
+  @Render('index')
+  index() {
+    return { message: 'Hello world!' };
+  }
+
+  @Get('/bots')
+  @Render('bots')
+  bots() {
+    return { message: 'Hello world!' };
+  }
 
   @Get('/bumper/getText')
   async getBumperText() {
