@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Bot {
+  id           Int      @id @default(autoincrement())
+  steamId      String?
+  login        String   @unique
+  password     String
+  sharedSecret String
+  proxyUrl     String
+  cookies      String?
+  workers      Json     @default("{}")
+  lastActionAt DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz
+}
+
+model WorkerDiscusBumper {
+  id           Int      @id @default(autoincrement())
+  groupId      String // часть после /groups/
+  forumId      String // цифра после groupId
+  discusId     String // id обсуждения цифры после forumId
+  lastBumpAt   DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz
+  bumpInterval Int      @default(20)
+}
+
+model DiscusBumperText {
+  id           Int      @id @default(autoincrement())
+  text         String   @unique
+  lastTimeUsed DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz
+}
