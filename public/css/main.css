@@ -14,10 +14,18 @@
     margin-bottom: 0;
 }
 
-.logs .l-number {
-    color: #617f7e;
-}
-
 .logs .l-time {
     color: #626262;
+}
+
+.logs .l-optional {
+    color: #696900;
+}
+
+.logs .l-log {
+    color: #0a7702;
+}
+
+.logs .l-error {
+    color: #790003;
 }

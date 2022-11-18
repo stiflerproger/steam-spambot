@@ -4,15 +4,19 @@ import { AddBumperTextDto } from './dto/add-bumper-text.dto';
 import { DeleteBumperTextDto } from './dto/delete-bumper-text.dto';
 import { UpdateBotWorkersDto } from './dto/update-bot-workers.dto';
 import { AddBotDto } from './dto/add-bot.dto';
+import { MyLogger } from './logger.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly loggerService: MyLogger,
+  ) {}
 
   @Get()
   @Render('index')
   index() {
-    return { message: 'Hello world!' };
+    return { logs: this.loggerService.getLogs() };
   }
 
   @Get('/bots')
