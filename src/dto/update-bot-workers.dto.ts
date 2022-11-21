@@ -1,7 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsString } from 'class-validator';
 
 export class UpdateBotWorkersDto {
+  @IsInt()
+  @Type(() => Number)
+  botId: number;
+
   @IsBoolean()
   @Type(() => Boolean)
   bumper: boolean;

@@ -3,20 +3,120 @@
 <head>
     <meta charset="utf-8"/>
     <title>SteamBot</title>
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-    />
-    <link
-            href="/css/main.css"
-            rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
 
 {{>navbar }}
 
-Боты
+<hr>
+<div class="container">
+    <div class="row">
+        <p class="lead">
+            Настройка ботов
+        </p>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Login</th>
+                <th scope="col">Shared</th>
+                <th scope="col">Proxy</th>
+                <th scope="col">Bump?</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each bots}}
+                <tr class="align-middle bot-{{this.id}}">
+                    <th scope="row">{{this.id}}</th>
+                    <td>{{this.login}}</td>
+                    <td>{{this.sharedSecret}}</td>
+                    <td>{{this.proxyUrl}}</td>
+                    <td><input data-key="isBump" type="checkbox"
+                        {{#if this.workers.bumper}}
+                               checked="true"
+                        {{/if}}
+                    ></td>
+                    <td>
+                        <button type="submit" onclick="saveBot({{this.id}})" class="btn btn-success">Save</button>
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr>
+<div class="container">
+    <div class="row">
+        <p class="lead">
+            Добавление нового аккаунта бота
+        </p>
+        <form>
+            <div class="form-group">
+                <label for="steamUsername">Логин</label>
+                <input type="text" class="form-control" id="steamUsername" aria-describedby="steamUsernameHelp"
+                       placeholder="Enter Login">
+                <small id="steamUsernameHelp" class="form-text text-muted">Логин аккаунта Steam</small>
+            </div>
+            <div class="form-group">
+                <label for="steamPassword">Пароль</label>
+                <input type="password" class="form-control" id="steamPassword" aria-describedby="steamPasswordHelp"
+                       placeholder="Enter Login">
+                <small id="steamPasswordHelp" class="form-text text-muted">Пароль аккаунта Steam</small>
+            </div>
+            <div class="form-group">
+                <label for="steamShared">SharedSecret</label>
+                <input type="password" class="form-control" id="steamShared" aria-describedby="steamSharedHelp"
+                       placeholder="Enter sercet">
+                <small id="steamSharedHelp" class="form-text text-muted">SharedSecret аккаунта. В maFile называется
+                    shared_secret, например pqh14RjR3Ydxf3CZzI8XpYMjBUc=</small>
+            </div>
+            <div class="form-group">
+                <label for="steamProxy">SharedSecret</label>
+                <input type="password" class="form-control" id="steamProxy" aria-describedby="steamProxyHelp"
+                       placeholder="Enter proxy">
+                <small id="steamProxyHelp" class="form-text text-muted">Proxy для аккаунта. Например:
+                    http://5D1321tX:Uu11jYS@91.198.189.222:60561</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить бота</button>
+        </form>
+    </div>
+</div>
+<hr>
+
+<script>
+    async function saveBot(id) {
+        try {
+            await axios.post('/bot/updateWorkers', {
+                data: {
+                    botId: Number(id),
+                    bumper: $(`.bot-${id} [data-key=isBump]`)[0].checked,
+                    creator: false,
+                    spammer: false,
+                }
+            });
+
+            new Notify({
+                status: 'success',
+                text: 'Сохранено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: e.response ? e.response.body : e,
+                autoclose: true,
+            });
+        }
+    }
+</script>
 
 </body>
 </html>

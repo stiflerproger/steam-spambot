@@ -98,7 +98,7 @@ export class DiscussionBumperService {
       return this.prepareCloserBump();
     }
 
-    this.logger.log('Бампим');
+    this.logger.log('Making Bump!');
 
     try {
       await botForBump.writeCommentInDiscussion(
