@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>SteamBot</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.css"/>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+{{>navbar }}
+
+<div class="container">
+    <div class="row">
+        <p class="lead">
+            Список текущих обсуждений
+        </p>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">ID</th>
+                <th scope="col">Группа</th>
+                <th scope="col">Тема</th>
+                <th scope="col">Время до следующего бампа (сек)</th>
+                <th scope="col">Интервал (мин)</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each discussions}}
+                <tr class="align-middle">
+                    <th scope="row">{{this.id}}</th>
+                    <td>{{this.groupId}}</td>
+                    <td>{{this.groupTitle}}</td>
+                    <td>{{this.forumTitle}}</td>
+                    <td>{{this.nextBump}}</td>
+                    <td><input id="discussion-{{this.id}}" type="number" value="{{this.bumpInterval}}"></td>
+                    <td>
+                        <button type="submit" onclick="updateInterval({{this.id}})" class="btn btn-success">Save</button>
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr>
+<div class="container bg-light">
+    <div class="row">
+        <p class="lead">
+            Добавление нового обсуждения
+        </p>
+        <div>
+            <div class="form-group">
+                <label for="bumperDiscussion">Ссылка</label>
+                <input type="text" class="form-control" id="bumperDiscussion" aria-describedby="bumperDiscussionHelp"
+                       placeholder="https://steamcommunity.com/groups/csmoneytrade/discussions/0/3182362958586523499/">
+                <small id="bumperDiscussionHelp" class="form-text text-muted">Ссылка на обсуждение, которое нужно бампить</small>
+            </div>
+            <button id="addDiscussionBtn" class="btn btn-primary" onclick="addDiscussion()">Добавить</button>
+        </div>
+    </div>
+</div>
+<hr>
+<div class="container">
+    <div class="row">
+        <p class="lead">
+            Список текущих текстов
+        </p>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Текст</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each text}}
+                <tr class="align-middle">
+                    <th scope="row">{{this.id}}</th>
+                    <td>{{this.text}}</td>
+                    <td>
+                        <button type="submit" onclick="deleteText({{this.id}})" class="btn btn-danger">Удалить</button>
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr>
+<div class="container bg-light">
+    <div class="row">
+        <p class="lead">
+            Добавление нового текста для бампера
+        </p>
+        <div>
+            <div class="form-group">
+                <label for="bumperText">Текст</label>
+                <input type="text" class="form-control" id="bumperText" aria-describedby="bumperTextHelp"
+                       placeholder="Enter Text">
+                <small id="bumperTextHelp" class="form-text text-muted">Любой текст, который будет выбираться ботами для бампа обсуждений</small>
+            </div>
+            <button id="addTextBtn" class="btn btn-primary" onclick="addText()">Добавить текст</button>
+        </div>
+    </div>
+</div>
+<hr>
+
+<script>
+    async function updateInterval(id) {
+        try {
+            await axios.post('/bumper/updateInterval', {
+                id: id,
+                bumpInterval: $(`#discussion-${id}`).val(),
+            });
+
+            new Notify({
+                status: 'success',
+                text: 'Сохранено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+    }
+
+    async function addDiscussion() {
+        try {
+            $('#addDiscussionBtn').prop('disabled', true);
+
+            await axios.post('/bumper/addDiscussion', {
+                link: $('#bumperDiscussion').val(),
+            });
+
+            $('#bumperText').val('');
+
+            new Notify({
+                status: 'success',
+                text: 'Добавлено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+
+        $('#addDiscussionBtn').prop('disabled', false);
+
+        return false;
+    }
+
+    async function addText() {
+        try {
+            $('#addTextBtn').prop('disabled', true);
+
+            await axios.post('/bumper/addText', {
+                text: $('#bumperText').val(),
+            });
+
+            $('#bumperText').val('');
+
+            new Notify({
+                status: 'success',
+                text: 'Добавлено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+
+        $('#addTextBtn').prop('disabled', false);
+
+        return false;
+    }
+
+    async function deleteText(id) {
+        try {
+            await axios.post('/bumper/deleteText', {
+                textId: id,
+            });
+
+            new Notify({
+                status: 'success',
+                text: 'Удалено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

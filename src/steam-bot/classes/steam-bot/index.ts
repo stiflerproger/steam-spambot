@@ -51,7 +51,7 @@ export default class SteamBot extends EventEmitter {
 
   #loginInitiated = false;
 
-  public async login(force = false) {
+  public async login(force = false, attempts?: number) {
     if (this.#loginInitiated) {
       throw new Error('Логин уже инициирован!');
     }
@@ -63,6 +63,18 @@ export default class SteamBot extends EventEmitter {
         await this.loginToSteam(force);
         break;
       } catch (e) {
+        if (typeof attempts === 'number') {
+          attempts--;
+
+          if (attempts <= 0) {
+            throw new Error(
+              `Не удалось авторизоваться ботом: ${
+                this.#options.login
+              } | ${String(e)}`,
+            );
+          }
+        }
+
         this.logger.error(`Ошибка логина. Пробуем снова через 1мин..`);
         await sleep(60000);
       }
@@ -135,6 +147,8 @@ export default class SteamBot extends EventEmitter {
 
           const sessionId = body.match(/g_sessionID = "(\S+)"/)?.[1];
 
+          forumData.forumTitle = body.match(/<title>(.+)::/)?.[1];
+
           return res(
             new CDiscussion({
               community: this.#community,
@@ -167,6 +181,11 @@ export default class SteamBot extends EventEmitter {
     const discussion = await this.getDiscussion(groupId, forumId, discusId);
 
     await discussion.postComment(comment);
+
+    return {
+      discussionTitle: group.name,
+      forumTitle: discussion.getTitle(),
+    };
   }
 }
 

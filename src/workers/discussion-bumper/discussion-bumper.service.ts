@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SteamBotService } from '../../steam-bot/steam-bot.service';
 import { PrismaService } from '../../prisma.service';
+import { UpdateDiscussionIntervalDto } from '../../dto/update-discussion-interval.dto';
 
 // постить в список обсуждений, рандомную строку для бампа
 // каждую тему поднимать раз в N минут
@@ -20,6 +21,72 @@ export class DiscussionBumperService {
 
   #startWorker() {
     this.prepareCloserBump().then();
+  }
+
+  getAllText() {
+    return this.prisma.discusBumperText.findMany();
+  }
+
+  async addDiscussion(link: string) {
+    const match = link.match(
+      /https:\/\/steamcommunity\.com\/groups\/(\S+)\/discussions\/(\d+)\/(\d+)\//,
+    );
+
+    if (!match) {
+      throw new Error('Ссылка на обсуждение не валидная!');
+    }
+
+    const groupId = match[1],
+      forumId = match[2],
+      discusId = match[3];
+
+    const record = await this.prisma.workerDiscusBumper.findFirst({
+      where: {
+        groupId,
+        forumId,
+        discusId,
+      },
+    });
+
+    if (record) {
+      throw new Error('Это обсуждение уже добавлено!');
+    }
+
+    return await this.prisma.workerDiscusBumper.create({
+      data: {
+        groupId,
+        forumId,
+        discusId,
+        bumpInterval: 20,
+      },
+    });
+  }
+
+  async updateDiscussionInterval(data: UpdateDiscussionIntervalDto) {
+    return this.prisma.workerDiscusBumper.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        bumpInterval: data.bumpInterval,
+      },
+    });
+  }
+
+  async getAllDiscussions() {
+    return (await this.prisma.workerDiscusBumper.findMany()).map((e) => {
+      const nextBump = Math.floor(
+        Math.max(
+          e.lastBumpAt.getTime() + e.bumpInterval * 60 * 1000 - Date.now(),
+          0,
+        ) / 1000,
+      );
+
+      return {
+        ...e,
+        nextBump,
+      };
+    });
   }
 
   // проверка бампов в БД, и установка таймера на бамп
@@ -69,10 +136,16 @@ export class DiscussionBumperService {
     this.logger.log(
       `Ближайший бамп через ${Math.floor(closerBump.timeout / 1000)} секунд!`,
     );
-    this.#bumperTimeout = setTimeout(
-      this.#doBump.bind(this, closerBump.id),
-      closerBump.timeout,
-    );
+
+    if (closerBump.timeout > 60000) {
+      // если больше минуты ждать, то просто перепроверяем ближайший бампер, на случай добавления новых
+      return setTimeout(this.prepareCloserBump.bind(this), 120000);
+    } else {
+      this.#bumperTimeout = setTimeout(
+        this.#doBump.bind(this, closerBump.id),
+        closerBump.timeout,
+      );
+    }
   }
 
   #bumperTimeout: NodeJS.Timeout;
@@ -101,12 +174,13 @@ export class DiscussionBumperService {
     this.logger.log('Making Bump!');
 
     try {
-      await botForBump.writeCommentInDiscussion(
-        record.groupId,
-        record.forumId,
-        record.discusId,
-        textRecord.text,
-      );
+      const { discussionTitle, forumTitle } =
+        await botForBump.writeCommentInDiscussion(
+          record.groupId,
+          record.forumId,
+          record.discusId,
+          textRecord.text,
+        );
 
       await this.prisma.discusBumperText.update({
         where: {
@@ -122,6 +196,8 @@ export class DiscussionBumperService {
           id: record.id,
         },
         data: {
+          forumTitle,
+          groupTitle: discussionTitle,
           lastBumpAt: new Date(),
         },
       });

@@ -7,6 +7,8 @@
     background-color: #f8f9fa;
     padding: 10px 25px;
     color: #989628;
+    max-height: calc(100vh - 100px);
+    overflow: scroll;
 }
 
 .logs > p {

@@ -8,6 +8,11 @@ export class CDiscussion {
       sessionId: string;
     },
   ) {}
+
+  getTitle() {
+    return this.options.forumData.forumTitle as string;
+  }
+
   /** Пишем текст на форуме, если у нас есть доступ */
   async postComment(comment) {
     return new Promise(async (res, rej) => {

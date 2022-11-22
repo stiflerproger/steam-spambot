@@ -5,6 +5,7 @@ import { GroupSpammerService } from './workers/group-spammer/group-spammer.servi
 import { AddBumperTextDto } from './dto/add-bumper-text.dto';
 import { PrismaService } from './prisma.service';
 import { DeleteBumperTextDto } from './dto/delete-bumper-text.dto';
+import { UpdateDiscussionIntervalDto } from './dto/update-discussion-interval.dto';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -23,15 +24,6 @@ export class AppService implements OnModuleInit {
     this.wDisBumper.init().then();
     this.wDisCreator.init().then();
     this.wGroupSpammer.init().then();
-  }
-
-  async getBumperText() {
-    const records = await this.prisma.discusBumperText.findMany();
-
-    return records.map((e) => ({
-      textId: e.id,
-      text: e.text,
-    }));
   }
 
   async addBumperText(data: AddBumperTextDto) {

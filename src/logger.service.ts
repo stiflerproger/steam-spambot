@@ -34,6 +34,15 @@ export class MyLogger extends ConsoleLogger implements LoggerService {
 
   #addLog(type: 'log' | 'error', message: any, ...optionalParams: any[]) {
     const datetime = `<span class="l-time">${new Date().toLocaleString()}</span>`;
+
+    if (
+      optionalParams?.length &&
+      Array.isArray(optionalParams[0]) &&
+      optionalParams[0].length > 1
+    ) {
+      optionalParams = [optionalParams[0].at(-1)];
+    }
+
     const optional = `<span class="l-optional">[${optionalParams.join()}]</span>`;
     const _message = `<span class="l-message l-${type}">${message}</span>`;
 

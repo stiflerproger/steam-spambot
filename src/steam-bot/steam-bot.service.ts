@@ -1,11 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import SteamBot from './classes/steam-bot';
 import { UpdateBotWorkersDto } from '../dto/update-bot-workers.dto';
+import { AddBotDto } from '../dto/add-bot.dto';
+import { Bot } from '@prisma/client';
 
 @Injectable()
 export class SteamBotService implements OnModuleInit {
   #bots: SteamBot[] = [];
+  logger: Logger = new Logger('SteamBotService');
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -23,12 +26,52 @@ export class SteamBotService implements OnModuleInit {
     await Promise.all(this.#bots.map((bot) => bot.login()));
   }
 
+  private async addAndStartBot(bot: Bot) {
+    const steamBot = new SteamBot(bot);
+    steamBot.on('cookies', this.#cookiesHandler.bind(this));
+    await steamBot.login(false, 1);
+
+    this.#bots.push(steamBot);
+  }
+
   getAllBots() {
     return this.prisma.bot.findMany({
       orderBy: {
         id: 'asc',
       },
     });
+  }
+
+  async addNewBot(data: AddBotDto) {
+    const bot = await this.prisma.bot.findFirst({
+      where: {
+        login: data.login,
+      },
+    });
+
+    if (bot) {
+      throw new Error('Такой бот уже добавлен');
+    }
+
+    const newBot = await this.prisma.bot.create({
+      data,
+    });
+
+    try {
+      this.logger.log('Проверяю нового бота на валидность данных..');
+      await this.addAndStartBot(newBot);
+      this.logger.log('Бот в норме!');
+    } catch (e) {
+      await this.prisma.bot.delete({
+        where: {
+          id: newBot.id,
+        },
+      });
+
+      throw new Error(e);
+    }
+
+    return { success: true };
   }
 
   async updateBotWorkers(data: UpdateBotWorkersDto) {

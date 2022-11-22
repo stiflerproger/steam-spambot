@@ -5,7 +5,7 @@
     <title>SteamBot</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="/css/main.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.css"/>
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -53,12 +53,12 @@
     </div>
 </div>
 <hr>
-<div class="container">
+<div class="container bg-light">
     <div class="row">
         <p class="lead">
             Добавление нового аккаунта бота
         </p>
-        <form>
+        <div>
             <div class="form-group">
                 <label for="steamUsername">Логин</label>
                 <input type="text" class="form-control" id="steamUsername" aria-describedby="steamUsernameHelp"
@@ -79,28 +79,60 @@
                     shared_secret, например pqh14RjR3Ydxf3CZzI8XpYMjBUc=</small>
             </div>
             <div class="form-group">
-                <label for="steamProxy">SharedSecret</label>
+                <label for="steamProxy">ProxyUrl</label>
                 <input type="password" class="form-control" id="steamProxy" aria-describedby="steamProxyHelp"
                        placeholder="Enter proxy">
                 <small id="steamProxyHelp" class="form-text text-muted">Proxy для аккаунта. Например:
                     http://5D1321tX:Uu11jYS@91.198.189.222:60561</small>
             </div>
-            <button type="submit" class="btn btn-primary">Добавить бота</button>
-        </form>
+            <button id="addBotBtn" class="btn btn-primary" onclick="addBot()">Добавить бота</button>
+        </div>
     </div>
 </div>
 <hr>
 
 <script>
+    async function addBot() {
+        try {
+            $('#addBotBtn').prop('disabled', true);
+
+            await axios.post('/bot/add', {
+                login: $('#steamUsername').val(),
+                password: $('#steamPassword').val(),
+                sharedSecret: $('#steamShared').val(),
+                proxyUrl: $('#steamProxy').val(),
+            });
+
+            $('#steamUsername').val('');
+            $('#steamPassword').val('');
+            $('#steamShared').val('');
+            $('#steamProxy').val('');
+
+            new Notify({
+                status: 'success',
+                text: 'Добавлен новый бот',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+
+        $('#addBotBtn').prop('disabled', false);
+
+        return false;
+    }
+
     async function saveBot(id) {
         try {
             await axios.post('/bot/updateWorkers', {
-                data: {
-                    botId: Number(id),
-                    bumper: $(`.bot-${id} [data-key=isBump]`)[0].checked,
-                    creator: false,
-                    spammer: false,
-                }
+                botId: Number(id),
+                bumper: $(`.bot-${id} [data-key=isBump]`)[0].checked,
+                creator: false,
+                spammer: false,
             });
 
             new Notify({
@@ -111,7 +143,7 @@
         } catch (e) {
             new Notify({
                 status: 'error',
-                text: e.response ? e.response.body : e,
+                text: String(e.response?.data?.message || e),
                 autoclose: true,
             });
         }

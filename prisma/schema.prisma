@@ -27,6 +27,8 @@ model WorkerDiscusBumper {
   groupId      String // часть после /groups/
   forumId      String // цифра после groupId
   discusId     String // id обсуждения цифры после forumId
+  groupTitle   String?
+  forumTitle   String?
   lastBumpAt   DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz
   bumpInterval Int      @default(20)
 }
