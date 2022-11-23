@@ -44,7 +44,8 @@ export class SteamBotService implements OnModuleInit {
     ).map((e) => {
       const sleepSec = Math.floor(
         Math.max(
-          (e.lastActionAt.getTime() + 10 * 60000 - Date.now()) / 1000,
+          (e.lastActionAt.getTime() + e.sleepInterval * 60000 - Date.now()) /
+            1000,
           0,
         ),
       );
@@ -96,7 +97,8 @@ export class SteamBotService implements OnModuleInit {
     if (
       bot.workers['bumper'] === data.bumper &&
       bot.workers['spammer'] === data.spammer &&
-      bot.workers['creator'] === data.creator
+      bot.workers['creator'] === data.creator &&
+      bot.sleepInterval === data.sleepInterval
     ) {
       return { success: true };
     }
@@ -104,6 +106,7 @@ export class SteamBotService implements OnModuleInit {
     await this.prisma.bot.update({
       where: { id: bot.id },
       data: {
+        sleepInterval: data.sleepInterval,
         workers: {
           bumper: data.bumper,
           spammer: data.spammer,
@@ -135,7 +138,7 @@ export class SteamBotService implements OnModuleInit {
       await this.prisma.bot.findMany({
         where: {
           lastActionAt: {
-            lt: new Date(Date.now() - 10 * 60 * 1000), // бот должен отлёживаться 10 минут
+            lt: new Date(),
           },
         },
         orderBy: {
@@ -143,7 +146,11 @@ export class SteamBotService implements OnModuleInit {
         },
       })
     ).filter((bot) => {
-      return !!bot.workers[workerType];
+      return (
+        !!bot.workers[workerType] &&
+        Date.now() - (bot.lastActionAt.getTime() + bot.sleepInterval * 60000) >
+          0
+      ); // убираем ботов, которые не отдохнули
     });
 
     if (!bots.length) return null;

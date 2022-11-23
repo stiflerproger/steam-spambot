@@ -11,15 +11,16 @@ datasource db {
 }
 
 model Bot {
-  id           Int      @id @default(autoincrement())
-  steamId      String?
-  login        String   @unique
-  password     String
-  sharedSecret String
-  proxyUrl     String
-  cookies      String?
-  workers      Json     @default("{}")
-  lastActionAt DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz
+  id            Int      @id @default(autoincrement())
+  steamId       String?
+  login         String   @unique
+  password      String
+  sharedSecret  String
+  proxyUrl      String
+  cookies       String?
+  workers       Json     @default("{}")
+  lastActionAt  DateTime @default("1970-01-01T00:00:00+00:00") @db.Timestamptz
+  sleepInterval Int      @default(10)
 }
 
 model WorkerDiscusBumper {

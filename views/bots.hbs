@@ -28,6 +28,7 @@
                 <th scope="col">Shared</th>
                 <th scope="col">Proxy</th>
                 <th scope="col">Sleep (сек)</th>
+                <th scope="col">Отлёжка (мин)</th>
                 <th scope="col">Bump?</th>
                 <th></th>
             </tr>
@@ -40,6 +41,7 @@
                     <td>{{this.sharedSecret}}</td>
                     <td>{{this.proxyUrl}}</td>
                     <td>{{this.sleepSec}}</td>
+                    <td><input data-key="sleepInterval" type="number" value="{{this.sleepInterval}}"></td>
                     <td><input data-key="isBump" type="checkbox"
                         {{#if this.workers.bumper}}
                                checked="true"
@@ -135,6 +137,7 @@
                 bumper: $(`.bot-${id} [data-key=isBump]`)[0].checked,
                 creator: false,
                 spammer: false,
+                sleepInterval: $(`.bot-${id} [data-key=sleepInterval]`).val(),
             });
 
             new Notify({

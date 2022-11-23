@@ -17,4 +17,8 @@ export class UpdateBotWorkersDto {
   @IsBoolean()
   @Type(() => Boolean)
   spammer: boolean;
+
+  @IsInt()
+  @Type(() => Number)
+  sleepInterval: number;
 }
