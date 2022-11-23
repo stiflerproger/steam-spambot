@@ -171,16 +171,19 @@ export class DiscussionBumperService {
       return this.prepareCloserBump();
     }
 
-    this.logger.log('Making Bump!');
-
     try {
-      const { discussionTitle, forumTitle } =
+      const { discussionTitle, forumTitle, comment } =
         await botForBump.writeCommentInDiscussion(
           record.groupId,
           record.forumId,
           record.discusId,
           textRecord.text,
         );
+
+      this.logger.log(
+        `Бот #${botForBump.id} | ${discussionTitle} > ${forumTitle} | Написал: ${comment}` +
+          `\r\n<a target="_blank" href="https://steamcommunity.com/groups/${record.groupId}/discussions/${record.forumId}/${record.discusId}/">ссылка на обсуждение</a>`,
+      );
 
       await this.prisma.discusBumperText.update({
         where: {

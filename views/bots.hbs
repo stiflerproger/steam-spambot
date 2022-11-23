@@ -27,6 +27,7 @@
                 <th scope="col">Login</th>
                 <th scope="col">Shared</th>
                 <th scope="col">Proxy</th>
+                <th scope="col">Sleep (сек)</th>
                 <th scope="col">Bump?</th>
                 <th></th>
             </tr>
@@ -38,6 +39,7 @@
                     <td>{{this.login}}</td>
                     <td>{{this.sharedSecret}}</td>
                     <td>{{this.proxyUrl}}</td>
+                    <td>{{this.sleepSec}}</td>
                     <td><input data-key="isBump" type="checkbox"
                         {{#if this.workers.bumper}}
                                checked="true"

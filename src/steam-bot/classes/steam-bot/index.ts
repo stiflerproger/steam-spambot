@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import { Logger } from '@nestjs/common';
 import CSteamGroup from 'steamcommunity/classes/CSteamGroup';
 import { CDiscussion } from './lib/discussion';
+import * as CatchHandler from 'catch-decorator';
 
 interface Options {
   id: number;
@@ -58,6 +59,8 @@ export default class SteamBot extends EventEmitter {
 
     this.#loginInitiated = true;
 
+    this.logger.log(`Логин...${this.#options.login}`);
+
     while (true) {
       try {
         await this.loginToSteam(force);
@@ -79,6 +82,8 @@ export default class SteamBot extends EventEmitter {
         await sleep(60000);
       }
     }
+
+    this.logger.log(`Залогинен!...${this.#options.login}`);
 
     this.#loginInitiated = false;
   }
@@ -162,6 +167,8 @@ export default class SteamBot extends EventEmitter {
   }
 
   /** Написать текст от имени бота в выбранной теме */
+  // @ts-ignore
+  @CatchHandler(Error, SteamBot.loginHandler)
   public async writeCommentInDiscussion(
     groupId: string,
     forumId: string,
@@ -185,7 +192,14 @@ export default class SteamBot extends EventEmitter {
     return {
       discussionTitle: group.name,
       forumTitle: discussion.getTitle(),
+      comment,
     };
+  }
+
+  static loginHandler(error: any, ctx: SteamBot) {
+    if (error?.message !== 'Not Logged In') throw error;
+    ctx.login().then(); // отправляем бота на релогин
+    throw error;
   }
 }
 

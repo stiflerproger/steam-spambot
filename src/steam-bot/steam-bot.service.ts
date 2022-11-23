@@ -34,11 +34,25 @@ export class SteamBotService implements OnModuleInit {
     this.#bots.push(steamBot);
   }
 
-  getAllBots() {
-    return this.prisma.bot.findMany({
-      orderBy: {
-        id: 'asc',
-      },
+  async getAllBots() {
+    return (
+      await this.prisma.bot.findMany({
+        orderBy: {
+          id: 'asc',
+        },
+      })
+    ).map((e) => {
+      const sleepSec = Math.floor(
+        Math.max(
+          (e.lastActionAt.getTime() + 10 * 60000 - Date.now()) / 1000,
+          0,
+        ),
+      );
+
+      return {
+        ...e,
+        sleepSec,
+      };
     });
   }
 
