@@ -6,6 +6,8 @@ import { AddBumperTextDto } from './dto/add-bumper-text.dto';
 import { PrismaService } from './prisma.service';
 import { DeleteBumperTextDto } from './dto/delete-bumper-text.dto';
 import { UpdateDiscussionIntervalDto } from './dto/update-discussion-interval.dto';
+import { AddCreatorTextDto } from './dto/add-creator-text.dto';
+import { DeleteCreatorTextDto } from './dto/delete-creator-text.dto';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -30,6 +32,25 @@ export class AppService implements OnModuleInit {
     return this.prisma.discusBumperText.create({
       data,
     });
+  }
+
+  async addCreatorText(data: AddCreatorTextDto) {
+    return this.prisma.discusCreatorText.create({
+      data: {
+        title: data.title,
+        message: data.text,
+      },
+    });
+  }
+
+  async deleteCreatorText(data: DeleteCreatorTextDto) {
+    try {
+      await this.prisma.discusCreatorText.delete({
+        where: {
+          id: data.textId,
+        },
+      });
+    } catch (e) {}
   }
 
   async deleteBumperText(data: DeleteBumperTextDto) {

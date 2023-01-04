@@ -8,6 +8,7 @@ import { Logger } from '@nestjs/common';
 import CSteamGroup from 'steamcommunity/classes/CSteamGroup';
 import { CDiscussion } from './lib/discussion';
 import * as CatchHandler from 'catch-decorator';
+import { CForum } from './lib/forum';
 
 interface Options {
   id: number;
@@ -166,6 +167,35 @@ export default class SteamBot extends EventEmitter {
     });
   }
 
+  private async getForum(app: string, forum: string): Promise<CForum> {
+    return new Promise((res, rej) => {
+      this.#community.httpRequestGet(
+        `https://steamcommunity.com/app/${app}/${forum}/`,
+        (err, response, body) => {
+          if (err) return rej(err);
+
+          const match = body.match(/(InitializeForum.+\));\W+}/)?.[1];
+
+          if (!match) return rej('На нашел данных по форуму');
+
+          const forumData = eval(match);
+
+          const sessionId = body.match(/g_sessionID = "(\S+)"/)?.[1];
+
+          forumData.forumTitle = body.match(/<title>(.+)::/)?.[1];
+
+          return res(
+            new CForum({
+              community: this.#community,
+              forumData,
+              sessionId,
+            }),
+          );
+        },
+      );
+    });
+  }
+
   /** Написать текст от имени бота в выбранной теме */
   // @ts-ignore
   @CatchHandler(Error, SteamBot.loginHandler)
@@ -201,6 +231,12 @@ export default class SteamBot extends EventEmitter {
     ctx.login().then(); // отправляем бота на релогин
     throw error;
   }
+
+  async createNewDiscussionTopic(app: string, title: string, message: string) {
+    const forum = await this.getForum(app, 'tradingforum');
+
+    return await forum.createTopic(title, message);
+  }
 }
 
 function InitializeCommentThread(...args) {
@@ -209,6 +245,14 @@ function InitializeCommentThread(...args) {
   const data = args[2];
 
   data.extended_data_parsed = JSON.parse(data.extended_data);
+
+  return data;
+}
+
+function InitializeForum(...args) {
+  if (typeof args[1] !== 'object') return {};
+
+  const data = args[1];
 
   return data;
 }

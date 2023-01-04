@@ -30,6 +30,7 @@
                 <th scope="col">Sleep (сек)</th>
                 <th scope="col">Отлёжка (мин)</th>
                 <th scope="col">Bump?</th>
+                <th scope="col">Create?</th>
                 <th></th>
             </tr>
             </thead>
@@ -44,6 +45,11 @@
                     <td><input data-key="sleepInterval" type="number" value="{{this.sleepInterval}}"></td>
                     <td><input data-key="isBump" type="checkbox"
                         {{#if this.workers.bumper}}
+                               checked="true"
+                        {{/if}}
+                    ></td>
+                    <td><input data-key="isCreate" type="checkbox"
+                        {{#if this.workers.creator}}
                                checked="true"
                         {{/if}}
                     ></td>
@@ -135,7 +141,7 @@
             await axios.post('/bot/updateWorkers', {
                 botId: Number(id),
                 bumper: $(`.bot-${id} [data-key=isBump]`)[0].checked,
-                creator: false,
+                creator: $(`.bot-${id} [data-key=isCreate]`)[0].checked,
                 spammer: false,
                 sleepInterval: $(`.bot-${id} [data-key=sleepInterval]`).val(),
             });

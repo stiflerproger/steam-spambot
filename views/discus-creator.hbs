@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>SteamBot</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/css/main.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.css"/>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-notify@0.5.5/dist/simple-notify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+{{>navbar }}
+
+<div class="container">
+    <div class="row">
+        <p class="lead">
+            Список текущих приложений
+        </p>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">App</th>
+                <th scope="col">Next create (сек)</th>
+                <th scope="col">Интервал (мин)</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each forums}}
+                <tr class="align-middle">
+                    <th scope="row">{{this.id}}</th>
+                    <td>{{this.app}}</td>
+                    <td>{{this.nextCreate}}</td>
+                    <td><input id="forum-{{this.id}}" type="number" value="{{this.createInterval}}"></td>
+                    <td>
+                        <button type="submit" onclick="updateInterval({{this.id}})" class="btn btn-success">Save</button>
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr>
+<div class="container">
+    <div class="row">
+        <p class="lead">
+            Список текущих текстов
+        </p>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Название</th>
+                <th scope="col">Сообщение</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each text}}
+                <tr class="align-middle">
+                    <th scope="row">{{this.id}}</th>
+                    <td>{{this.title}}</td>
+                    <td><pre>{{this.message}}</pre></td>
+                    <td>
+                        <button type="submit" onclick="deleteText({{this.id}})" class="btn btn-danger">Удалить</button>
+                    </td>
+                </tr>
+            {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>
+<hr>
+<div class="container bg-light">
+    <div class="row">
+        <p class="lead">
+            Добавление нового текста
+        </p>
+        <div>
+            <div class="form-group">
+                <label for="creatorTitle">Текст</label>
+                <input type="text" class="form-control" id="creatorTitle" aria-describedby="creatorTitleHelp"
+                       placeholder="Enter Title">
+                <small id="creatorTitleHelp" class="form-text text-muted">Название обсуждения</small>
+                <textarea class="form-control" id="creatorText" placeholder="Discussion text"></textarea>
+                <small id="creatorTextHelp" class="form-text text-muted">Текст для обсуждения. Формат такой же, как в steam</small>
+            </div>
+            <button id="addTextBtn" class="btn btn-primary" onclick="addText()">Добавить текст</button>
+        </div>
+    </div>
+</div>
+<hr>
+
+<script>
+    async function updateInterval(id) {
+        try {
+            await axios.post('/creator/updateInterval', {
+                id: id,
+                createInterval: $(`#forum-${id}`).val(),
+            });
+
+            new Notify({
+                status: 'success',
+                text: 'Сохранено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+    }
+
+    async function addText() {
+        try {
+            $('#addTextBtn').prop('disabled', true);
+
+            await axios.post('/creator/addText', {
+              title: $('#creatorTitle').val(),
+              text: $('#creatorText').val(),
+            });
+
+            $('#creatorTitle').val('');
+            $('#creatorText').val('');
+
+            new Notify({
+                status: 'success',
+                text: 'Добавлено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+
+        $('#addTextBtn').prop('disabled', false);
+
+        return false;
+    }
+
+    async function deleteText(id) {
+        try {
+            await axios.post('/creator/deleteText', {
+                textId: id,
+            });
+
+            new Notify({
+                status: 'success',
+                text: 'Удалено',
+                autoclose: true,
+            });
+        } catch (e) {
+            new Notify({
+                status: 'error',
+                text: String(e.response?.data?.message || e),
+                autoclose: true,
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
