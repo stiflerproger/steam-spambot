@@ -110,6 +110,7 @@ export default class SteamBot extends EventEmitter {
           accountName: this.#options.login,
           password: this.#options.password,
           twoFactorCode: SteamTotp.getAuthCode(this.#options.sharedSecret),
+          disableMobile: true, // OAuth Fix
         },
         async (err, sessionID, cookies, steamguard) => {
           if (err) {
