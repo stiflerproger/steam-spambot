@@ -15,15 +15,21 @@ export class SteamBotService implements OnModuleInit {
   async onModuleInit() {
     const dbBots = await this.prisma.bot.findMany();
 
-    this.#bots = dbBots.map((bot) => {
+    for (const bot of dbBots) {
       const steamBot = new SteamBot(bot);
 
       steamBot.on('cookies', this.#cookiesHandler.bind(this));
 
-      return steamBot;
-    });
-
-    await Promise.all(this.#bots.map((bot) => bot.login()));
+      if (Object.keys(bot.workers).length) {
+        try {
+          await bot.login();
+        } catch (e) {
+          console.error('Ошибка инициации', e);
+        }
+      } else {
+        console.log('Бот без воркеров', bot.login)
+      }
+    }
   }
 
   private async addAndStartBot(bot: Bot) {
