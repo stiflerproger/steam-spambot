@@ -22,7 +22,7 @@ export class SteamBotService implements OnModuleInit {
 
       if (Object.keys(bot.workers).length) {
         try {
-          await bot.login();
+          await steamBot.login();
         } catch (e) {
           console.error('Ошибка инициации', e);
         }
