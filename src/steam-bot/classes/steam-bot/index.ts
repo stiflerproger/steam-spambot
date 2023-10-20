@@ -1,14 +1,15 @@
 import * as SteamCommunity from 'steamcommunity';
 import * as request from 'request';
-import { promisify } from 'util';
+import {promisify} from 'util';
 import * as SteamTotp from 'steam-totp';
-import { sleep } from '../../../utils/sleep';
-import { EventEmitter } from 'events';
-import { Logger } from '@nestjs/common';
+import {sleep} from '../../../utils/sleep';
+import {EventEmitter} from 'events';
+import {Logger} from '@nestjs/common';
 import CSteamGroup from 'steamcommunity/classes/CSteamGroup';
-import { CDiscussion } from './lib/discussion';
+import {CDiscussion} from './lib/discussion';
 import * as CatchHandler from 'catch-decorator';
-import { CForum } from './lib/forum';
+import {CForum} from './lib/forum';
+import {EAuthTokenPlatformType, LoginSession} from "steam-session";
 
 interface Options {
   id: number;
@@ -23,6 +24,7 @@ export default class SteamBot extends EventEmitter {
   public id: number;
   readonly #community: SteamCommunity;
   #options: Options;
+  #session: LoginSession;
   private readonly request: any;
 
   logger: Logger;
@@ -31,6 +33,11 @@ export default class SteamBot extends EventEmitter {
     super();
     this.#options = options;
     this.id = options.id;
+    this.#session = new LoginSession(EAuthTokenPlatformType.WebBrowser, {
+      httpProxy: this.#options.proxyUrl,
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+    });
 
     this.logger = new Logger('SteamBot_' + options.id);
 
@@ -105,22 +112,19 @@ export default class SteamBot extends EventEmitter {
 
       this.#options.cookies = [];
 
-      this.#community.login(
-        {
-          accountName: this.#options.login,
-          password: this.#options.password,
-          twoFactorCode: SteamTotp.getAuthCode(this.#options.sharedSecret),
-          disableMobile: true, // OAuth Fix
-        },
-        async (err, sessionID, cookies, steamguard) => {
-          if (err) {
-            this.logger.log('Ошибка логина: ' + err.message);
-            return reject(err);
-          }
+      this.#session.startWithCredentials({
+        accountName: this.#options.login,
+        password: this.#options.password,
+        steamGuardCode: SteamTotp.getAuthCode(this.#options.sharedSecret),
+      })
+        .then(async (response) => {
+          const cookies = await this.#session.getWebCookies();
 
           this.logger.log('Куки не подошли, новая сессия');
 
           this.#options.cookies = cookies;
+
+          this.#community.setCookies(cookies);
 
           this.emit(
             'cookies',
@@ -130,8 +134,11 @@ export default class SteamBot extends EventEmitter {
           );
 
           return resolve(true);
-        },
-      );
+        })
+        .catch(e => {
+          return reject(e);
+        });
+
     });
   }
 
