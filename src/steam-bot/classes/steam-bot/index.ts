@@ -117,23 +117,28 @@ export default class SteamBot extends EventEmitter {
         password: this.#options.password,
         steamGuardCode: SteamTotp.getAuthCode(this.#options.sharedSecret),
       })
-        .then(async (response) => {
-          const cookies = await this.#session.getWebCookies();
+        .then((response) => {
+          this.logger.log('Ожидаю события авторизации..');
 
-          this.logger.log('Куки не подошли, новая сессия');
+          this.#session.once('authenticated', async () => {
+            const cookies = await this.#session.getWebCookies();
 
-          this.#options.cookies = cookies;
+            this.logger.log('Получил новые куки!');
 
-          this.#community.setCookies(cookies);
+            this.#options.cookies = cookies;
 
-          this.emit(
-            'cookies',
-            this.#options.id,
-            this.#community.steamID.getSteamID64(),
-            cookies,
-          );
+            this.#community.setCookies(cookies);
 
-          return resolve(true);
+            this.emit(
+              'cookies',
+              this.#options.id,
+              this.#community.steamID.getSteamID64(),
+              cookies,
+            );
+
+            return resolve(true);
+          });
+
         })
         .catch(e => {
           return reject(e);
