@@ -87,6 +87,7 @@ export default class SteamBot extends EventEmitter {
         }
 
         this.logger.error(`Ошибка логина. Пробуем снова через 1мин..`);
+        console.error(e);
         await sleep(60000);
       }
     }
