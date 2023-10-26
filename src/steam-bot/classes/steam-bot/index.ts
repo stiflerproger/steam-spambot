@@ -33,11 +33,6 @@ export default class SteamBot extends EventEmitter {
     super();
     this.#options = options;
     this.id = options.id;
-    this.#session = new LoginSession(EAuthTokenPlatformType.WebBrowser, {
-      httpProxy: this.#options.proxyUrl,
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
-    });
 
     this.logger = new Logger('SteamBot_' + options.id);
 
@@ -112,6 +107,12 @@ export default class SteamBot extends EventEmitter {
       }
 
       this.#options.cookies = [];
+
+      this.#session = new LoginSession(EAuthTokenPlatformType.WebBrowser, {
+        httpProxy: this.#options.proxyUrl,
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+      });
 
       this.#session.startWithCredentials({
         accountName: this.#options.login,
